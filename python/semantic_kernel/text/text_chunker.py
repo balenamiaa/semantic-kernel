@@ -197,10 +197,9 @@ def _split_str_lines(
 
     text = text.replace("\r\n", "\n")
     lines: list[str] = []
-    was_split = False
     for split_option in separators:
         if not lines:
-            lines, was_split = _split_str(
+            lines, _ = _split_str(
                 text=text,
                 max_tokens=max_tokens,
                 separators=split_option,
@@ -208,14 +207,14 @@ def _split_str_lines(
                 token_counter=token_counter,
             )
         else:
-            lines, was_split = _split_list(
+            lines, _ = _split_list(
                 text=lines,
                 max_tokens=max_tokens,
                 separators=split_option,
                 trim=trim,
                 token_counter=token_counter,
             )
-        if was_split:
+        if all(token_counter(line) <= max_tokens for line in lines):
             break  # pragma: no cover
 
     return lines
@@ -264,6 +263,7 @@ def _split_str(
 
     if 0 < cutpoint < len(text):
         lines = []
+        input_was_split = True
         for text_part in [text[:cutpoint], text[cutpoint:]]:
             split, has_split = _split_str(
                 text=text_part,
